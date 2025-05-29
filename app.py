@@ -394,7 +394,7 @@ def search_for_file(driver, wait, filename_without_ext):
             except Exception as e:
                 print(f"Warning: Could not reliably clear search input field: {e}. Proceeding anyway.")
             
-            time.sleep(1) # Small buffer after clearing for UI to register
+            time.sleep(3) # Small buffer after clearing for UI to register
             search_input.send_keys(filename_without_ext)
             last_search_term = filename_without_ext
             print(f"Typed '{filename_without_ext}' into search.")
@@ -429,7 +429,7 @@ def click_details_and_open_attachment(driver, wait):
         wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
         
         # --- ADDED AS PER USER REQUEST ---
-        time.sleep(1) # Added to ensure UI stability before clicking the details icon
+        time.sleep(2) # Added to ensure UI stability before clicking the details icon
         print("Paused for 1 second before clicking details icon.")
         # --- END ADDITION ---
 
@@ -536,13 +536,13 @@ def upload_file_and_select_dropdown(driver, wait, file_path):
         print("File path sent to input field.")
 
         # 3. CRUCIAL WAIT: Wait for any loading spinner/overlay within the modal to disappear.
-        print("Waiting for modal loader to disappear (indicating file processing)...")
-        try:
-            WebDriverWait(driver, 20).until(EC.invisibility_of_element_located((By.XPATH, UPLOAD_MODAL_LOADER_XPATH)))
-            print("Modal loader is invisible. File likely processed by front-end.")
-        except TimeoutException:
-            print("Warning: Modal loader did not disappear within timeout or was not found. Proceeding with caution.")
-            time.sleep(2) # Fallback sleep if no explicit loader was detected or it's very brief
+        # print("Waiting for modal loader to disappear (indicating file processing)...")
+        # try:
+            # WebDriverWait(driver, 20).until(EC.invisibility_of_element_located((By.XPATH, UPLOAD_MODAL_LOADER_XPATH)))
+            # print("Modal loader is invisible. File likely processed by front-end.")
+        # except TimeoutException:
+            # print("Warning: Modal loader did not disappear within timeout or was not found. Proceeding with caution.")
+        time.sleep(2) # Fallback sleep if no explicit loader was detected or it's very brief
 
         # 4. Re-locate the custom dropdown header before interacting with it.
         dropdown_header = wait.until(EC.element_to_be_clickable((By.XPATH, DROPDOWN_HEADER_XPATH)))
