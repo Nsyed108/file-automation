@@ -550,9 +550,9 @@ def upload_file_and_select_dropdown(driver, wait, file_path):
         print("Dropdown header clicked to open options.")
 
         # 5. Wait for dropdown options container to be visible and then the specific option
-        print("Waiting for dropdown options list to appear...")
-        options_container = wait.until(EC.visibility_of_element_located((By.XPATH, DROPDOWN_OPTIONS_LIST_WRAPPER_XPATH)))
-        print("Dropdown options list wrapper is visible.")
+        # print("Waiting for dropdown options list to appear...")
+        # options_container = wait.until(EC.visibility_of_element_located((By.XPATH, DROPDOWN_OPTIONS_LIST_WRAPPER_XPATH)))
+        # print("Dropdown options list wrapper is visible.")
         
         time.sleep(0.5) # A tiny buffer, as a last resort if explicit waits fail here.
 
