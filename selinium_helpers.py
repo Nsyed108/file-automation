@@ -36,29 +36,6 @@ driver_instance = None
 last_search_term = None
 last_login_attempt_time = None
 
-# def get_driver():
-
-
-#     chrome_options = uc.ChromeOptions()
-#     chrome_options.add_argument("--no-sandbox")
-#     chrome_options.add_argument("--disable-dev-shm-usage")
-#     chrome_options.headless = False
-#     chrome_options.add_argument("--disable-gpu")
-#     chrome_options.add_argument("--window-size=1920,1080")
-#     chrome_options.add_argument("--start-maximized")
-#     chrome_options.add_argument("--disable-extensions")
-#     chrome_options.add_argument("--disable-popup-blocking")
-#     chrome_options.add_argument("--no-zygote")
-#     chrome_options.add_argument("--allow-insecure-localhost")
-
-#     try:
-#         driver_instance = uc.Chrome(version_main=136, use_subprocess=True, options=chrome_options)
-#         time.sleep(1)
-#         return driver_instance
-#     except Exception as e:
-#         print(f"Error initializing driver: {e}")
-#         sys.exit(1)
-
 def teardown_driver(exception=None):
     global driver_instance
     if driver_instance:
@@ -72,16 +49,20 @@ def use_cloned_chrome_profile_directly():
     global driver_instance
     if driver_instance:
         try:
-            driver_instance.current_url
+            driver_instance.title  # check if still alive
+            print("Reusing existing driver instance.")
             return driver_instance
         except WebDriverException:
+            print("Driver instance invalid, restarting...")
             try:
                 driver_instance.quit()
             except Exception:
                 pass
             driver_instance = None
+
     options = webdriver.ChromeOptions()
-    options.add_argument("--user-data-dir=/home/nabeel/.config/google-chrome/Default - Selenium")
+    profile_dir = "/tmp/selenium-profile-shared"  # <--- REUSABLE LOCATION
+    options.add_argument(f"--user-data-dir={profile_dir}")
     options.add_experimental_option("detach", True)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument("--disable-blink-features=AutomationControlled")
@@ -93,6 +74,8 @@ def use_cloned_chrome_profile_directly():
     time.sleep(10)
 
     return driver_instance
+
+
 
 def process_files_with_selenium(email, password, file_paths):
     global driver_instance, last_login_attempt_time, last_search_term
@@ -236,3 +219,17 @@ def close_details_panel(driver, wait):
         wait.until(EC.invisibility_of_element_located((By.XPATH, ATTACHMENTS_TAB_XPATH)))
     except:
         pass
+
+def auto_upload_from_folder(email, password, folder_path):
+    if not os.path.isdir(folder_path):
+        print(f"❌ Directory does not exist: {folder_path}")
+        return
+
+    pdf_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith(".pdf")]
+
+    if not pdf_files:
+        print("No PDF files found to upload.")
+        return
+
+    print(f"Found {len(pdf_files)} PDFs. Starting upload...")
+    process_files_with_selenium(email, password, pdf_files)

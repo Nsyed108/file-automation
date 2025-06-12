@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from routes import register_routes
-from selinium_helpers import teardown_driver, use_cloned_chrome_profile_directly
+from selinium_helpers import auto_upload_from_folder, teardown_driver, use_cloned_chrome_profile_directly
 
 app = Flask(__name__)
 CORS(app)
@@ -11,7 +11,8 @@ register_routes(app)
 if __name__ == '__main__':
     try:
         print("Starting Flask server...")
-        use_cloned_chrome_profile_directly()
+        # Auto start upload
+        auto_upload_from_folder("Sypore", "Performance@1124", "/home/nabeel/Documents/downloaded-files")
         app.run(debug=False, port=5000, threaded=False)
     except Exception as e:
         print(f"Flask application failed to start or encountered a fatal error: {e}")
