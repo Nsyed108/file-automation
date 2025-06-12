@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+env/
+.venv/
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Logs and coverage
+*.log
+*.coverage
+htmlcov/
+.coverage.*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Compiled Selenium screenshots
+*.png
