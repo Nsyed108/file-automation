@@ -132,12 +132,14 @@ def login(driver, wait, email, password):
 def navigate_to_accessioning(driver, wait):
     wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
     el = wait.until(EC.element_to_be_clickable((By.XPATH, ACCESSIONING_MENU_XPATH)))
+    time.sleep(1)  # Ensure the element is ready
     el.click()
     wait.until(EC.presence_of_element_located((By.ID, ALL_TAB_ID)))
 
 def click_all_tab(driver, wait):
     wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
     el = wait.until(EC.element_to_be_clickable((By.ID, ALL_TAB_ID)))
+    time.sleep(1)  # Ensure the element is ready
     el.click()
 
 def search_for_file(driver, wait, term):
