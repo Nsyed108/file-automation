@@ -71,7 +71,7 @@ def use_cloned_chrome_profile_directly():
     driver_instance = webdriver.Chrome(service=service, options=options)
 
     driver_instance.get("https://corebiolabs.limsabc.com/")
-    time.sleep(10)
+    time.sleep(30)
 
     return driver_instance
 
@@ -145,11 +145,12 @@ def search_for_file(driver, wait, term):
     wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
     input_box = wait.until(EC.presence_of_element_located((By.ID, SEARCH_INPUT_ID)))
     refresh = wait.until(EC.element_to_be_clickable((By.ID, SEARCH_REFRESH_BUTTON_ID)))
-
+    time.sleep(1)  # Ensure the input box is ready
     if last_search_term != term:
         input_box.clear()
         input_box.send_keys(term)
         last_search_term = term
+    time.sleep(3)  # Allow time for search to process
     refresh.click()
     wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
     wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, DETAILS_ICON_CSS)))
@@ -159,22 +160,25 @@ def click_details_and_open_attachment(driver, wait):
     time.sleep(4)
     icon = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, DETAILS_ICON_CSS)))
     icon.click()
+    time.sleep(4)
     wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
+    time.sleep(2)
     wait.until(EC.element_to_be_clickable((By.XPATH, ATTACHMENTS_TAB_XPATH))).click()
+    time.sleep(3)
     wait.until(EC.element_to_be_clickable((By.XPATH, ADD_ATTACHMENT_BUTTON_XPATH))).click()
 
 def upload_file_and_select_dropdown(driver, wait, file_path):
     wait.until(EC.presence_of_element_located((By.XPATH, UPLOAD_MODAL_CONTAINER_XPATH)))
-
+    time.sleep(2)
     input_elem = wait.until(EC.presence_of_element_located((By.ID, FILE_INPUT_IN_MODAL_ID)))
-    
+    time.sleep(2)
     # Ensure it's interactable
     if not input_elem.is_displayed():
         raise Exception("File input is not visible!")
-
+    time.sleep(2)
     print(f"Uploading: {file_path}")
     assert os.path.exists(file_path), f"❌ File path does not exist: {file_path}"
-
+    time.sleep(2)
     input_elem.send_keys(file_path)
     time.sleep(3)
 
