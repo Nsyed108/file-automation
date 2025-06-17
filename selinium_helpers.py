@@ -71,7 +71,7 @@ def use_cloned_chrome_profile_directly():
     driver_instance = webdriver.Chrome(service=service, options=options)
 
     driver_instance.get("https://corebiolabs.limsabc.com/")
-    time.sleep(30)
+    time.sleep(10)
 
     return driver_instance
 

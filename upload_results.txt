@@ -1,5 +1,22 @@
-WND2303846.pdf - Failed: TimeoutException
-SCBL344479.pdf - Failed: TimeoutException
-AST2307194.pdf - Failed: TimeoutException
-RPP2306108.pdf - Failed: TimeoutException
-RPP2306110.pdf - Failed: TimeoutException
+[
+  {
+    "filename": "WND2303846.pdf",
+    "status": "Uploaded"
+  },
+  {
+    "filename": "SCBL344479.pdf",
+    "status": "Uploaded"
+  },
+  {
+    "filename": "AST2307194.pdf",
+    "status": "Uploaded"
+  },
+  {
+    "filename": "RPP2306108.pdf",
+    "status": "Uploaded"
+  },
+  {
+    "filename": "RPP2306110.pdf",
+    "status": "Uploaded"
+  }
+]
