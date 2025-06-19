@@ -1,11 +1,12 @@
 import os
+import shutil
 import sys
 import time
 from flask import json
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException
 import undetected_chromedriver as uc
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -46,10 +47,14 @@ def teardown_driver(exception=None):
         driver_instance = None
 
 def use_cloned_chrome_profile_directly():
+    """
+    Returns a valid, reusable Chrome WebDriver instance using a shared profile.
+    If a previous driver is alive, it is reused; otherwise, a new one is started.
+    """
     global driver_instance
     if driver_instance:
         try:
-            driver_instance.title  # check if still alive
+            _ = driver_instance.title  # Check if still alive
             print("Reusing existing driver instance.")
             return driver_instance
         except WebDriverException:
@@ -61,23 +66,26 @@ def use_cloned_chrome_profile_directly():
             driver_instance = None
 
     options = webdriver.ChromeOptions()
-    profile_dir = "/tmp/selenium-profile-shared"  # <--- REUSABLE LOCATION
+    profile_dir = "/tmp/selenium-profile-shared"  # Persistent profile for reuse
     options.add_argument(f"--user-data-dir={profile_dir}")
     options.add_experimental_option("detach", True)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument("--disable-blink-features=AutomationControlled")
 
+    # Start a new driver
     service = Service(ChromeDriverManager().install())
     driver_instance = webdriver.Chrome(service=service, options=options)
 
+    # Initial navigation (if required)
     driver_instance.get("https://corebiolabs.limsabc.com/")
-    time.sleep(10)
+    time.sleep(10)  # Wait for page load, use WebDriverWait in production
 
+    print("Started new driver instance.")
     return driver_instance
 
 
 
-def process_files_with_selenium(email, password, file_paths):
+def process_files_with_selenium(email, password, input_dir, success_dir):
     global driver_instance, last_login_attempt_time, last_search_term
     driver = use_cloned_chrome_profile_directly()
     wait = WebDriverWait(driver, 45)
@@ -86,22 +94,20 @@ def process_files_with_selenium(email, password, file_paths):
     try:
         try:
             WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, ACCESSIONING_MENU_XPATH)))
-            is_logged_in_and_on_app = True
         except:
-            is_logged_in_and_on_app = False
-
-        if not is_logged_in_and_on_app:
-            current_time = time.time()
-            if last_login_attempt_time is None or (current_time - last_login_attempt_time > 120):
-                last_login_attempt_time = current_time
-                login(driver, wait, email, password)
-            else:
-                raise RuntimeError("Skipping login attempt due to recent failure. Cannot proceed.")
+            login(driver, wait, email, password)
 
         navigate_to_accessioning(driver, wait)
         click_all_tab(driver, wait)
         wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
         wait.until(EC.presence_of_element_located((By.ID, SEARCH_INPUT_ID)))
+
+        # Only process .pdf files in the input directory
+        file_paths = [
+            os.path.join(input_dir, f)
+            for f in os.listdir(input_dir)
+            if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(input_dir, f))
+        ]
 
         for path in file_paths:
             name = os.path.splitext(os.path.basename(path))[0]
@@ -109,17 +115,44 @@ def process_files_with_selenium(email, password, file_paths):
                 search_for_file(driver, wait, name)
                 click_details_and_open_attachment(driver, wait)
                 upload_file_and_select_dropdown(driver, wait, path)
-                file_upload_results.append({"filename": os.path.basename(path), "status": "Uploaded"})
+                # Move to success_dir on successful upload
+                dest_path = os.path.join(success_dir, os.path.basename(path))
+                shutil.move(path, dest_path)
+                print(f"Moved {path} to {dest_path}")
+                file_upload_results.append({
+                    "filename": os.path.basename(path),
+                    "status": "Uploaded and moved"
+                })
             except Exception as e:
-                file_upload_results.append({"filename": os.path.basename(path), "status": f"Failed: {type(e).__name__}"})
+                file_upload_results.append({
+                    "filename": os.path.basename(path),
+                    "status": f"Failed: {type(e).__name__}"
+                })
             finally:
-                close_details_panel(driver, wait)
-                wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
-                wait.until(EC.presence_of_element_located((By.ID, SEARCH_INPUT_ID)))
+                try:
+                    close_details_panel(driver, wait)
+                except Exception:
+                    pass
+                try:
+                    wait.until(EC.invisibility_of_element_located((By.XPATH, GLOBAL_LOADER_XPATH)))
+                except Exception:
+                    pass
+                try:
+                    wait.until(EC.presence_of_element_located((By.ID, SEARCH_INPUT_ID)))
+                except Exception:
+                    pass
 
         return file_upload_results
-    except Exception as e:
-        raise
+    except Exception:
+        pass
+    finally:
+        print("Closing browser...")
+        try:
+            driver.quit()
+        except Exception:
+            pass
+        driver_instance = None
+
 
 def login(driver, wait, email, password):
     driver.get(TARGET_URL)
